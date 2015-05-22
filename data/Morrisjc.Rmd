@@ -38,7 +38,9 @@ First I need to look over the data.
 ```{r}
 str(politics)
 ```
-After looking at the data, subjects should be a factor and not a integer. I will explicitly tell R to change subject to a factor.  That is, I will factor the subject variable and reassign it back to the subject variable.  Additionally, the categorical data type (e.g. post and pre) for testime should be switched around. Therefore, I will refactor those two variables and double check my work to ensure all commands were changed correctly.
+
+After looking at the data, subjects should be a factor and not a integer. I will explicitly tell R to change subject to a factor.  Additionally, the categorical data type (e.g. post and pre) for testime should be switched around. Therefore, I will refactor those two variables and double check my work to ensure all commands were changed correctly.
+
 ```{r}
 politics$subject<-factor(politics$subject)
 politics$testtime<-factor(politics$testtime, levels=c("pre", "post"))
@@ -46,12 +48,18 @@ str(politics)
 ```
 <!-- Find the minimum, mean, and variance for posttest
 optimism scores. -->
+
 I will use the R to find the minimum, mean, and variance.
+
 ```{r}
-min(politics$income[politics$testtime=="post"])
-mean(politics$income[politics$testtime=="post"])
-var(politics$income[politics$testtime=="post"])
+min(politics$optimismscore[politics$testtime=="post"])
+mean(politics$optimismscore[politics$testtime=="post"])
+var(politics$optimismscore[politics$testtime=="post"])
+min(politics$optimismscore)
+mean(politics$optimismscore)
+var(politics$optimismscore)
 ```
+
 <!-- Create a histogram of posttest optimism scores.
 Feel free to use the default ugly settings since
 we didn't cover how to do this in ggplot2. If
@@ -59,47 +67,63 @@ you're a real go-getter, see if you can figure
 out how to make a prettier histogram with better
 labels, etc. using ggplot2. -->
 
-For this section I will specifically command R to run only data from the posttest to avoid over counting.
-```{r}
-hist(politics$income[politics$testtime=="post"])
+For this section I will specifically command R to run only data from the optimismscores on the posttest.
 
+```{r}
+hist(politics$optimismscores[politics$testtime=="post"])
+hist(optimismscores)
+hist(optimismscores[politics$testime=="post"])
+hist(politics$optimismscore[politics$testtime=="post"])
 ```
+
 <!-- Run a test to determine whether political affiliation
 is independent of one's gender.
 Present the data supporting your analyses in graphical or
 tabular form.
 -->
-Ok, first I must see if the two categorical variables are independent of one another. I can do this by calculating the frequency that individuals appear in different political groups.  Additionally, I will use a Pearson's Chi-square test of independence to test the hypothesis that the two variables (affiliation and gender) are independent.  I will only calculate posttest data to ensure people are not counted twice.
+
+Ok, first I must see if the two categorical variables are independent of one another. I can do this by calculating the frequency that individuals appear in different political groups.  Additionally, I will use a Pearson's Chi-square test of independence to test the hypothesis and determine whetherthe two variables (affiliation and gender) are independent.  I will only calculate posttest data to ensure people are not counted twice. 
 
 ```{r}
-tab<-table(politics$party[politics$testtime=="post"],politics$sex[politics$testtime=="post"])
+pre=politics[trues,]
+post=politics[!trues,]
+
+tab<-table(politics$party[politics$testtime=="pre"],politics$sex[politics$testtime=="pre"])
 tab
-```
+mytable<-table(pre$party,pre$sex)
+mytable
 
-This reflects the different sex and their party affiliation and how they fell into different conditions.
-
-```{r}
-chisq.test(politics$party[politics$testtime=="pre"],politics$sex[politics$testtime=="pre"])
+margin.table(mytable,1) #Row margins
+margin.table(mytable,2) #Row margins
+chisq.test(politics$party[politics$testime=="pre"]),politics$sex[politics$testime=="pre"]
 chisq.test(pre$party,pre$sex)
 ```
-
+Further, the results from the chi-test reflect the different sex and their party affiliation and how they fell into different conditions.
 R(i.e squared)(2)=.72674,p=0.6953. the results are not significant can reject the null hypothesis that party affiliation is independent of sex.
+
 
 <!-- Run a test to determine whether or not males and females
 have different incomes.
 Create a graph to display your data that includes the relevant
 means and standard errors.-->
 
-To see if there is an difference between income for male and female, I will run a t-test. Additionally, since males and females represent different groups of people we'll need to use an independent t-test.
+To see if there is an difference between incomes for male and female, I will run a t-test. Additionally, since males and females represent different groups of people we'll need to use an independent t-test.
 
 ```{r}
+t.test(pre$[pre$sex=="male"],
+      pre$income[pre$]sex=="female"],
+      paired=FALSE, Var.equal=FALSE,
+      alternative="two.sided",
+      conf.level=.95
 t.test(politics$income[politics$sex=="male"&
                          politics$testtime=="pre"],politics$income[politics$sex=="female"& politics$testtime=="pre"])
+t.test(politics$income[politics$sex=="male" & politics$testtime=="pre"],politics$income[politics$sex=="female" & politics$testtime=="pre"])
 ```
 
-t(62.9)=-.37,p=.71. as, you can see from the output, males and females did not differ. That is, in terms of income.
+t(62.9)=-.37,p=.71. as, you can see from the output, males and females did differ. That is, in terms of income.
 
 Next, I will need to create the figure. I must command R I want to work with dplyr library.  I will the dplyr library to summarize my politics dataset. I will then calculate the the means and standard errors of the means for the different conditions.  Next, I will command R to use the ggplot2 library to create a nice figure.  Further, this will be the same chain of action used for any other figures I will create unless I commmand otherwise.
+
 ```{r}
 library("dplyr")
 temp<-politics[politics$testtime=="pre",]%>%group_by(sex)%>%summarize(means=mean(income),
@@ -110,9 +134,11 @@ f<-ggplot(temp,aes(x=factor(sex),y=means))+
     geom_errorbar(aes(ymax=means+sems, ymin=means-sems), width=.1)
 f
 ```
+
 This is a simple figure, but I will create a more elaborate figure with the following commands.
+
 ```{r}
-f<-f+ggtitle("Video Optimism Scores by Sex")+
+f<-f+ggtitle("Incomes by Sex")+
     labs(x="Sex", y="Pretest Income Scores\n(higher=more Income")+
     scale_x_discrete(breaks=c("female","male"),labels=c("Female","Male"))+
     theme(plot.title=element_text(size=15,face="bold",vjust=.5))+
@@ -135,13 +161,21 @@ your data that includes the relevant means and standard errors.-->
 
 Ok, I will use a two-way Between Subjects ANOVA. (That is, to see if the  variables party affiliation and sex predict optimismscore independently). Further, to observe interactions between the independent variables.
 ```{r}
+t.test(political$optimism[(politics$testtime=="pre")&
+                          (politics$party=="republican")],
+       politics$optimism[(politics$testtime=="post")&
+                           (politics$party=="republican")],
+       paired=TRUE, conf.level=1-.05/3
+       
 summary(aov(optimismscore~party*sex,data=politics[politics$testtime=="post",]))
 ```
 From these results, I can conclude that optimism score is associated with political affiliation, F(2,60)=27.063,p=4.2 Income is not associated to sex, F(1,60)=0.040,p=.0843. Furthermore, there was no interaction between affiliation sex, F(2,60)=.1.213,p=.0.304.
 
 Next, I will command R to create a plot and manually adjust the fill.  This will be done by converting the named colors to hexadecimal and using the gplots library.
+
 ```{r}
-temp<-politics[optimismscore$testtime=="post",]%>%group_by(party,sex,)%>%summarize(means=mean(optimism score),sems=sd(optimism score))
+temp<-politics[politics$testtime=="post",]%>%group_by(party,sex)%>%
+    summarize(means=mean(optimismscores),sems=sd(optimsimscores)/sqrt(length(optimismscores)))
 library("gplots")
 col1=col2hex("deeppink")
 col2=col2hex("deepskyblue2")
@@ -150,8 +184,8 @@ f<-ggplot(temp, aes(x=party, y=means, fill=sex))+
     scale_fill_manual(values=c(col1,col2),name="Sex",breaks=c("female","male"),labels=c("Female", "Male"))+
     theme(legend.key=element_rect(color="black"))+
     geom_errorbar(aes(ymax=means+sems, ymin=means-sems),width=.2,position=position_dodge(.9))+
-    ggtitle("Optimism Score by Sex and Political Affiliation")+
-    labs(x="Political Party Affiliation",y="Optimism Score")+
+    ggtitle("Optimism Scores by Sex and Political Affiliation")+
+    labs(x="Political Party Affiliation",y="Income\n(thousands of dollars)")+
     scale_x_discrete(breaks=c("democrat","independent","republican"),labels=c("Democrat","Independent","Republican"))+
     theme(plot.title=element_text(size=15,face="bold",vjust=.5))+
     theme(axis.title.x=element_text(size=12,face="bold",vjust=-.25))+
@@ -181,7 +215,7 @@ f<-ggplot(temp, aes(x=party, y=means, group=sex, color=sex))+
     geom_point(size=2)+
     scale_color_manual(values=c(col1,col2),name="Sex",breaks=c("female","male"),labels=c("Female", "Male"))+
     geom_errorbar(aes(ymax=means+sems, ymin=means-sems),width=.2)+
-    ggtitle("Incomes by Sex and Political Affiliation")+
+    ggtitle("Optimsim Score by Sex and Political Affiliation")+
     labs(x="Political Party Affiliation",y="Income\n(thousands of dollars)")+
     scale_x_discrete(breaks=c("democrat","independent","republican"),labels=c("Democrat","Independent","Republican"))+
     theme(plot.title=element_text(size=15,face="bold",vjust=.5))+
@@ -208,9 +242,11 @@ f
 watching videos depends on sex.-->
 
 The best course of action to determine if optimism scores before and after watching videos vary depending on sex, I must run a 2 way mixed ANOVA.  I'm using the mixed ANOVA because one or more of the variables is within-subjects and one or more of the variables is between-subjects. That is, subjects indicated their optimism before and after the videos (i.e a within-subjects factor) and because different people are affiliated with different political parties (i.e. a between-subjects factor).
+
 ```{r}
 summary(aov(optimismscore~testtime*sex+Error(subject/testtime),data=politics))
 ```
+
 From these results, I can conclude that optimism was related to their party affiliation. F(1,64)=0.119,p<.001, and watching videos did affect optimism, F(1,64)=41299,p<.001.  Furthermore, the results also show there was no interaction between taking the test before and after watching videos and their sex, F(1,64)=.049,p=.825.
 
 <!-- Run a Multiple Regression Analysis to see
@@ -222,11 +258,14 @@ lines that best fit the data for both sexes regardless of
 whether the lines are warranted based on the statistical
 analyses-->
 
-I will command R to use Multiple Regression to predict the pretest outcome for optimism scores from income and sex.
+I will command R to use Multiple Regression to predict the posttest outcome for optimism scores from income and sex.
+
 ```{r}
 summary(lm(optimismscore[testtime=="post"]~optimismscore[testtime=="pre"]+party [testtime=="pre"],data=politics))
 ```
+
 From these results, we would conclude that party affiliation and sex do not predict optimism scores in the pretest, R2(2)=.014,F(2,36)=.44,p=.65.  Although you typically would not create a scatter plot without significant lines that best fit. I have been instructed for practice to create one.
+
 ```{r}
 f<-ggplot(politics[politics$testtime=="pre",],aes(x=income,y=optimismscore,color=sex))+
     geom_point(size=2)+
